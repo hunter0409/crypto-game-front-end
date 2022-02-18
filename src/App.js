@@ -7,7 +7,7 @@ import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
 import myEpicGame from './utils/MyEpicGame.json';
 import { ethers } from 'ethers';
 import Arena from './Components/Arena';
-
+import LoadingIndicator from './Components/LoadingIndicator';
 
 // Constants
 const TWITTER_HANDLE = '_buildspace';
@@ -16,8 +16,9 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const App = () => {
   // State
   const [currentAccount, setCurrentAccount] = useState(null);
-
   const [characterNFT, setCharacterNFT] = useState(null);
+
+  const [isLoading, setIsLoading] = useState(false);
 
   // Actions
   const checkIfWalletIsConnected = async () => {
@@ -26,6 +27,8 @@ const App = () => {
 
       if (!ethereum) {
         console.log('Make sure you have MetaMask!');
+
+        setIsLoading(false);
         return;
       } else {
         console.log('We have the ethereum object', ethereum);
@@ -47,6 +50,10 @@ const App = () => {
 
   // Render Methods
   const renderContent = () => {
+
+    if (isLoading) {
+      return <LoadingIndicator />;
+    }
     /*
      * Scenario #1
      */
@@ -105,6 +112,14 @@ const App = () => {
   };
 
   useEffect(() => {
+    checkIfWalletIsConnected();
+  }, []);
+
+  useEffect(() => {
+    /*
+     * Anytime our component mounts, make sure to immiediately set our loading state
+     */
+    setIsLoading(true);
     checkIfWalletIsConnected();
   }, []);
 
