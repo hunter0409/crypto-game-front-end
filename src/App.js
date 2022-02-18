@@ -3,6 +3,10 @@ import './App.css';
 import twitterLogo from './assets/twitter-logo.svg';
 import SelectCharacter from './Components/SelectCharacter';
 
+import { CONTRACT_ADDRESS, transformCharacterData } from './constants';
+import myEpicGame from './utils/MyEpicGame.json';
+import { ethers } from 'ethers';
+
 
 // Constants
 const TWITTER_HANDLE = '_buildspace';
@@ -11,6 +15,8 @@ const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
 const App = () => {
   // State
   const [currentAccount, setCurrentAccount] = useState(null);
+
+  const [characterNFT, setCharacterNFT] = useState(null);
 
   // Actions
   const checkIfWalletIsConnected = async () => {
@@ -35,6 +41,34 @@ const App = () => {
       }
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  // Render Methods
+  const renderContent = () => {
+    /*
+     * Scenario #1
+     */
+    if (!currentAccount) {
+      return (
+        <div className="connect-wallet-container">
+          <img
+            src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
+            alt="Monty Python Gif"
+          />
+          <button
+            className="cta-button connect-wallet-button"
+            onClick={connectWalletAction}
+          >
+            Connect Wallet To Get Started
+          </button>
+        </div>
+      );
+      /*
+       * Scenario #2
+       */
+    } else if (currentAccount && !characterNFT) {
+      return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
     }
   };
 
@@ -71,28 +105,49 @@ const App = () => {
     checkIfWalletIsConnected();
   }, []);
 
+  useEffect(() => {
+    /*
+     * The function we will call that interacts with out smart contract
+     */
+    const fetchNFTMetadata = async () => {
+      console.log('Checking for Character NFT on address:', currentAccount);
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const gameContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        myEpicGame.abi,
+        signer
+      );
+
+      const txn = await gameContract.checkIfUserHasNFT();
+      if (txn.name) {
+        console.log('User has character NFT');
+        setCharacterNFT(transformCharacterData(txn));
+      } else {
+        console.log('No character NFT found');
+      }
+    };
+
+    /*
+     * We only want to run this, if we have a connected wallet
+     */
+    if (currentAccount) {
+      console.log('CurrentAccount:', currentAccount);
+      fetchNFTMetadata();
+    }
+  }, [currentAccount]);
+
   return (
     <div className="App">
       <div className="container">
         <div className="header-container">
           <p className="header gradient-text">⚔️ Metaverse Slayer ⚔️</p>
           <p className="sub-text">Team up to protect the Metaverse!</p>
-          <div className="connect-wallet-container">
-            <img
-              src="https://64.media.tumblr.com/tumblr_mbia5vdmRd1r1mkubo1_500.gifv"
-              alt="Monty Python Gif"
-            />
-            {/*
-             * Button that we will use to trigger wallet connect
-             * Don't forget to add the onClick event to call your method!
-             */}
-            <button
-              className="cta-button connect-wallet-button"
-              onClick={connectWalletAction}
-            >
-              Connect Wallet To Get Started
-            </button>
-          </div>
+          {/* This is where our button and image code used to be!
+           *	Remember we moved it into the render method.
+           */}
+          {renderContent()}
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
