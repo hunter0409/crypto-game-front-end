@@ -11,6 +11,7 @@ const SelectCharacter = ({ setCharacterNFT }) => {
     const [characters, setCharacters] = useState([]);
     const [gameContract, setGameContract] = useState(null);
 
+
     const mintCharacterNFTAction = (characterId) => async () => {
         try {
             if (gameContract) {
@@ -115,8 +116,6 @@ const SelectCharacter = ({ setCharacterNFT }) => {
                 >{`Mint ${character.name}`}</button>
             </div>
         ));
-
-
 
     return (
         <div className="select-character-container">
